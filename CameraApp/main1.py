@@ -38,13 +38,14 @@ class WorkThread(QtCore.QThread):
         logging.info("Abriendo captura desde " + url)
         self.camera.capture = cv2.VideoCapture(url)
         flag = self.camera.capture.isOpened()
-        while not flag:
+        while flag:
+            
+            if flag:
+                self.timer = QtCore.QTimer()
+                self.timer.setSingleShot(False)
+                self.timer.timeout.connect(self.emitsignal)
+                self.timer.start(1)
             flag = self.camera.capture.isOpened()
-        if flag:
-            self.timer = QtCore.QTimer()
-            self.timer.setSingleShot(False)
-            self.timer.timeout.connect(self.emitsignal)
-            self.timer.start(1)
 
         self.camera.capture.release()
         cv2.destroyAllWindows()

@@ -6,7 +6,7 @@ Created on Tue Jan 26 20:13:34 2016
 """
 
 from PyQt4 import QtGui, QtCore
-import sys
+import sys, time
 from ui import principal
 import cv2
 import CameraManager
@@ -31,11 +31,12 @@ class WorkThread(QtCore.QThread):
         logging.info("Abriendo captura desde " + url)
         self.camera.capture = cv2.VideoCapture(url)
         while (self.camera.capture.isOpened()):
+            time.sleep(0.01)
             ret, frame = self.camera.capture.read()
 
             if ret == True:
                 self.emit(QtCore.SIGNAL('update(PyQt_PyObject)'), frame)
-                self.sleep(1)
+                
             else:
                 print('No se obtuvo frame, sale de while')
                 break
