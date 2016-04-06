@@ -9,7 +9,7 @@ from PyQt4 import QtGui, QtCore
 import sys, time
 from ui import principal
 import cv2
-import CameraManager
+from core import CameraManager
 import logging
 
 class WorkThread(QtCore.QThread):
@@ -58,7 +58,7 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
         self.ptzLabelSelected = False
         
         logging.debug('Inicializacion del manager de camaras')
-        self.cameraManager = CameraManager.CameraManager()
+        self.cameraManager = CameraManager.CameraManager(fe=False, ptz=False)
         
         ''' Seleccion de frames de camaras '''
         self.feLabel.mousePressEvent = self.feLabel_selected

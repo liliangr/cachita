@@ -6,28 +6,18 @@ Created on Sat Oct 24 14:49:21 2015
 """
 
 from onvif import ONVIFCamera
-#import time
+import time
+
+#mycam = ONVIFCamera('10.9.6.49', 80, 'admin', '12345', 'C:\onvif\wsdl\\')
 
 mycam = ONVIFCamera('10.2.1.49', 80, 'admin', '12345', 'C:\onvif\wsdl\\')
-
-#mycam = ONVIFCamera('10.2.1.49', 80, 'admin', '12345', 'C:\onvif\wsdl\\')
 # Create media service object
-
 media = mycam.create_media_service()
 # Create ptz service object
 ptz = mycam.create_ptz_service()
 
 # Get target profile
 media_profile = media.GetProfiles()[0];
-
-#media = mycam.create_media_service()
-#device = mycam.create_devicemgmt_service()
-
-
-# Get target profile
-
-#print mycam.devicemgmt.GetServices({'IncludeCapability': False })
-#print media.GetStreamUri()
 
 # Get PTZ configuration options for getting continuous move range
 request = ptz.create_type('GetConfigurationOptions')
