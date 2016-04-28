@@ -6,43 +6,11 @@ Created on Tue Jan 26 20:13:34 2016
 """
 
 from PyQt4 import QtGui, QtCore
-import sys, time
+import sys
 from ui import principal
-import cv2
-from core import CameraManager
+#import cv2
+from core import CameraManager, WorkThread
 import logging
-
-class WorkThread(QtCore.QThread):
-    def __init__(self):
-        QtCore.QThread.__init__(self)
-        
-    
-    def __del__(self):
-        self.wait()
-    
-    def load(self, ipcamera):
-        self.camera = ipcamera
-        self.start()
-    
-    
-    def run(self):
-        print int(QtCore.QThread.currentThreadId())
-        url = self.camera.getStreamUri()
-        logging.info("Abriendo captura desde " + url)
-        self.camera.capture = cv2.VideoCapture(url)
-        while (self.camera.capture.isOpened()):
-            time.sleep(0.01)
-            ret, frame = self.camera.capture.read()
-
-            if ret == True:
-                self.emit(QtCore.SIGNAL('update(PyQt_PyObject)'), frame)
-                
-            else:
-                print('No se obtuvo frame, sale de while')
-                break
-            
-        self.camera.capture.release()
-        cv2.destroyAllWindows()
 
      
 
@@ -58,7 +26,7 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
         self.ptzLabelSelected = False
         
         logging.debug('Inicializacion del manager de camaras')
-        self.cameraManager = CameraManager.CameraManager(fe=False, ptz=False)
+        self.cameraManager = CameraManager.CameraManager(fe=False)
         
         ''' Seleccion de frames de camaras '''
         self.feLabel.mousePressEvent = self.feLabel_selected
@@ -66,14 +34,25 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
         self.mousePressEvent = self.labels_unselected
         
         ''' Accion de los botones '''
-        self.btnCalibrate.clicked.connect(self.open_stream)
-#        self.btn_Right.clicked.connect(self.ptzCam.moveRight)
-#        self.btn_Right.clicked.connect(self.ptzCam.moveLeft)
-#        self.btn_Down.clicked.connect(self.ptzCam.moveDown)
-#        self.btn_Up.clicked.connect(self.ptzCam.moveUp)
+        self.btn_Capture.clicked.connect(self.open_stream)
         
-#        self.btn_Down.clicked.connect(self.cameraManager.feCam.getTimestamp)
-#        self.btn_Up.clicked.connect(self.cameraManager.feCam.setTimestamp)
+        self.btn_AbsRight.clicked.connect(self.cameraManager.ptzCam.oneStepRight)
+        self.btn_AbsLeft.clicked.connect(self.cameraManager.ptzCam.oneStepLeft)
+        self.btn_AbsDown.clicked.connect(self.cameraManager.ptzCam.oneStepDown)
+        self.btn_AbsUp.clicked.connect(self.cameraManager.ptzCam.oneStepUp)
+        self.btn_AbsZoomIn.clicked.connect(self.cameraManager.ptzCam.oneStepZoomIn)
+        self.btn_AbsZoomOut.clicked.connect(self.cameraManager.ptzCam.oneStepZoomOut)
+        
+        self.btn_ContRight.clicked.connect(self.cameraManager.ptzCam.continuousToRight)
+        self.btn_ContLeft.clicked.connect(self.cameraManager.ptzCam.continuousToLeft)
+        self.btn_ContUp.clicked.connect(self.cameraManager.ptzCam.continuousToUp)
+        self.btn_ContDown.clicked.connect(self.cameraManager.ptzCam.continuousToDown)
+        self.btn_ContZoomIn.clicked.connect(self.cameraManager.ptzCam.continuousZoomIn)
+        self.btn_ContZoomOut.clicked.connect(self.cameraManager.ptzCam.continuousZoomOut)
+        
+        
+        self.btn_RecVideoPTZ.clicked.connect(self.cameraManager.ptzCam.getSnapshotUri)
+        
         
         self.threadPool = []
 
@@ -83,11 +62,11 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
     
     def open_stream(self):
         if self.cameraManager.ptzCam != None:
-            self.threadPool.append(WorkThread())
+            self.threadPool.append(WorkThread.CaptureThread())
             self.connect(self.threadPool[len(self.threadPool)-1], QtCore.SIGNAL("update(PyQt_PyObject)"), self.showPTZStreaming)
             self.threadPool[len(self.threadPool)-1].load(self.cameraManager.ptzCam)
         if self.cameraManager.feCam != None:
-            self.threadPool.append(WorkThread())
+            self.threadPool.append(WorkThread.CaptureThread())
             self.connect(self.threadPool[len(self.threadPool)-1], QtCore.SIGNAL("update(PyQt_PyObject)"), self.showFEStreaming)
             self.threadPool[len(self.threadPool)-1].load(self.cameraManager.feCam)
       
@@ -141,20 +120,14 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
             if self.cameraManager.feCam != None:
                 if self.cameraManager.feCam.capture.isOpened()==True:
                     self.cameraManager.feCam.capture.release()
+            for i in range(0, len(self.threadPool)-1):
+                self.threadPool[i].stop()
             event.accept()
         else:
             event.ignore()
 
 
     def showPTZStreaming(self, frame):
-#        ptzUrl = self.cameraManager.ptzCam.getStreamUri()
-#        self.cameraManager.ptzCam.capture = cv2.VideoCapture(ptzUrl)
-#        
-#        while (self.cameraManager.ptzCam.capture.isOpened()):
-#            ret, frame = self.cameraManager.ptzCam.capture.read()
-#
-#            if ret == True:
-
         image = QtGui.QImage(frame.tostring(), frame.shape[1], 
                          frame.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
      
@@ -163,14 +136,7 @@ class PrincipalForm(QtGui.QMainWindow, principal.Ui_MainWindow):
                                QtCore.Qt.KeepAspectRatio)
         self.ptzLabel.setPixmap(pixmap)
         QtGui.QApplication.processEvents()
-#            else:
-#                break
-#            
-#        if self.cameraManager.ptzCam.capture.isOpened()==False:
-#            print('No se pudo abrir la interfaz!')
-#        
-#        self.cameraManager.ptzCam.capture.release()
-#        cv2.destroyAllWindows()
+
                
         
     def showFEStreaming(self, frame):

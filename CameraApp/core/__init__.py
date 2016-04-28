@@ -1,6 +1,7 @@
-import CameraManager
+import CameraManager, WorkThread
 
 __all__ = ( 'CameraManager',
 'FishEyeCamera',
 'PTZCamera',
-'IPCamera')
+'IPCamera',
+'WorkThread')

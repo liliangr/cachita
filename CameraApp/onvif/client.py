@@ -201,10 +201,11 @@ class ONVIFCamera(object):
     >>> ptz_service.GetConfiguration()
     '''
 
+#wsdl_dir='/etc/onvif/wsdl/'
     # Class-level variables
     services_template = {'devicemgmt': None, 'ptz': None, 'media': None,
                          'imaging': None, 'events': None, 'analytics': None }
-    def __init__(self, host, port ,user, passwd, wsdl_dir='/etc/onvif/wsdl/',
+    def __init__(self, host, port ,user, passwd, wsdl_dir='/opt/python-onvif/wsdl/',
                  cache_location=None, cache_duration=None,
                  encrypt=True, daemon=False, no_cache=False):
         self.host = host

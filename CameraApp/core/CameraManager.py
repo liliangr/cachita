@@ -29,12 +29,12 @@ class CameraManager():
         fePort = 80
         feUser = 'admin'
         fePwd = '12345'
-#        try:
-        feCam = FishEyeCamera(feHost, fePort, feUser, fePwd)
-        logging.info('Creacion de camara fe: OK')
-#        except:
-#            feCam = None
-#            logging.error('No se encontro una camara con estos parametros')
+        try:
+            feCam = FishEyeCamera(feHost, fePort, feUser, fePwd)
+            logging.info('Creacion de camara fe: OK')
+        except:
+            feCam = None
+            logging.error('No se encontro una camara con estos parametros')
         return feCam
         
         
